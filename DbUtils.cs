@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Data.SQLite;
+using System.IO;
 using static HabitTracker.Utils;
 
 namespace HabitTracker
@@ -11,9 +12,29 @@ namespace HabitTracker
 
         public static SQLiteConnection GenerateConnection()
         {
-            var conn = new SQLiteConnection($"Data Source={DbPath}");
+            SQLiteConnection conn;
+
+            if (File.Exists(DbPath))
+            {
+                conn = new SQLiteConnection($"Data Source={DbPath}");
+                conn.Open();
+
+                return conn;
+            }
+
+            conn = new SQLiteConnection($"Data Source={DbPath};New=True;Compress=True");
             conn.Open();
 
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = @"create table Habit (
+                                    Habit_ID    integer
+                                        constraint Habit_pk
+                                            primary key autoincrement,
+                                    Habit_Name  varchar(25),
+                                    Time_Logged double(6, 2)
+                                );";
+            cmd.ExecuteNonQuery();
+            
             return conn;
         }
 
