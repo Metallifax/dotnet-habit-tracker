@@ -8,6 +8,7 @@ namespace HabitTracker
 {
     public static class DbUtils
     {
+        
         private const string DbPath = "./database.db";
 
         public static SQLiteConnection GenerateConnection()
