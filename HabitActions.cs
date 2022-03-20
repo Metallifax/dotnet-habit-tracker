@@ -9,8 +9,8 @@ namespace HabitTracker
     {
         public static void CreateHabit()
         {
-            var habitName = PromptForInput("Which new habit would you like to store?: ");
-            var habitTime = PromptForInput("How long did you spend on the habit?: ");
+            var habitName = PromptForInput("Which new habit would you like to create?: ");
+            var habitTime = PromptForInput("How many times did you do the habit?: ");
 
             var conn = DbUtils.GenerateConnection();
             var habitExists = DbUtils.CheckIfHabitExists(habitName, conn);
@@ -42,7 +42,7 @@ namespace HabitTracker
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = $"INSERT INTO Habit (Habit_Name, Time_Logged) VALUES ('{habitName}', {habitTime});";
                 cmd.ExecuteNonQuery();
-                Print($"Habit {habitName} was inserted!");
+                Print($"Habit '{habitName}' was inserted!");
             }
             catch (Exception e)
             {
@@ -61,9 +61,11 @@ namespace HabitTracker
             try
             {
                 var reader = cmd.ExecuteReader();
+                Print("\n     Habits     ");
+                Print("----------------");
                 while (reader.Read())
                 {
-                    Print($"{reader.GetString(1)} ({reader.GetDouble(2)} hrs)");
+                    Print($"{reader.GetString(1)} (qty {reader.GetDouble(2)})");
                 }
             }
             catch (Exception e)
@@ -85,7 +87,7 @@ namespace HabitTracker
             else
             {
                 var habitName = PromptForInput("Which new habit would you like to update?: ");
-                var habitTime = PromptForInput("How long did you spend on the habit?: ");
+                var habitTime = PromptForInput("How many times did you do the habit?: ");
                 conn = DbUtils.UpdateHabitInDb(habitName, habitTime);
             }
 
@@ -115,7 +117,7 @@ namespace HabitTracker
                     var cmd = conn.CreateCommand();
                     cmd.CommandText = $"DELETE FROM Habit WHERE Habit_Name='{habitName}';";
                     cmd.ExecuteNonQuery();
-                    Print($"Habit {habitName} was deleted!");
+                    Print($"Habit '{habitName}' was deleted!");
                 }
                 catch (Exception e)
                 {
@@ -124,7 +126,7 @@ namespace HabitTracker
             }
             else
             {
-                Print($"Habit with the name {habitName} doesn't exist!");
+                Print($"Habit with the name '{habitName}' doesn't exist!");
             }
 
             conn.Close();
