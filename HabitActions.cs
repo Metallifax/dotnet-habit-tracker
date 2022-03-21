@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Data.SQLite;
 using static HabitTracker.Utils;
 
 namespace HabitTracker
@@ -14,11 +13,7 @@ namespace HabitTracker
                 var habitName = PromptForInput("Which new habit would you like to create?: ");
                 var habitTime = PromptForInput("How many times did you do the habit?: ");
 
-                if (Convert.ToInt32(habitTime) <= 0)
-                {
-                    Print("Habit time must be greater than 0");
-                    return;
-                }
+                if (NameAndTimeIsInvalid(habitName, habitTime)) return;
 
                 using var conn = DbUtils.GenerateConnection();
                 var habitExists = DbUtils.CheckIfHabitExists(habitName, conn);
@@ -45,18 +40,11 @@ namespace HabitTracker
                     }
                 }
 
-                try
-                {
-                    using var cmd = conn.CreateCommand();
-                    cmd.CommandText =
-                        $"INSERT INTO Habit (Habit_Name, Time_Logged) VALUES ('{habitName}', {habitTime});";
-                    cmd.ExecuteNonQuery();
-                    Print($"Habit '{habitName}' was inserted!");
-                }
-                catch (Exception e)
-                {
-                    Print(ReturnError(e));
-                }
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText =
+                    $"INSERT INTO Habit (Habit_Name, Time_Logged) VALUES ('{habitName}', {habitTime});";
+                cmd.ExecuteNonQuery();
+                Print($"Habit '{habitName}' was inserted!");
             }
             catch (Exception e)
             {
@@ -87,59 +75,62 @@ namespace HabitTracker
 
         public static void UpdateHabit(string? habitNameArg = null, string? habitTimeArg = null)
         {
-            if (habitTimeArg != null && habitNameArg != null)
+            try
             {
-                using var conn = DbUtils.UpdateHabitInDb(habitNameArg, habitTimeArg);
-            }
-            else
-            {
-                var habitName = PromptForInput("Which new habit would you like to update?: ");
-                var habitTime = PromptForInput("How many times did you do the habit?: ");
-
-                if (Convert.ToInt32(habitTime) <= 0)
+                if (habitTimeArg != null && habitNameArg != null)
                 {
-                    Print("Habit time must be greater than 0");
-                    return;
+                    using var conn = DbUtils.UpdateHabitInDb(habitNameArg, habitTimeArg);
                 }
+                else
+                {
+                    var habitName = PromptForInput("Which new habit would you like to update?: ");
+                    var habitTime = PromptForInput("How many times did you do the habit?: ");
 
-                using var conn = DbUtils.UpdateHabitInDb(habitName, habitTime);
+                    if (NameAndTimeIsInvalid(habitName, habitTime)) return;
+
+                    using var conn = DbUtils.UpdateHabitInDb(habitName, habitTime);
+                }
+            }
+            catch (Exception e)
+            {
+                Print(ReturnError(e));
             }
         }
 
         public static void DeleteHabit()
         {
-            var habitName = PromptForInput("Which habit would you like to delete?: ");
-
-            using var conn = DbUtils.GenerateConnection();
-            var habitExists = DbUtils.CheckIfHabitExists(habitName, conn);
-
-            if (habitExists)
+            try
             {
-                Print($"Are you sure you want to delete {habitName}?\n1. Yes\n2. No");
-                var choice = PromptForInput("Your choice: ");
-                switch (Convert.ToInt32(choice))
-                {
-                    case 1:
-                        break;
-                    case 2:
-                        return;
-                }
+                var habitName = PromptForInput("Which habit would you like to delete?: ");
 
-                try
+                using var conn = DbUtils.GenerateConnection();
+                var habitExists = DbUtils.CheckIfHabitExists(habitName, conn);
+
+                if (habitExists)
                 {
+                    Print($"Are you sure you want to delete {habitName}?\n1. Yes\n2. No");
+                    var choice = PromptForInput("Your choice: ");
+                    switch (Convert.ToInt32(choice))
+                    {
+                        case 1:
+                            break;
+                        case 2:
+                            return;
+                    }
+
                     using var cmd = conn.CreateCommand();
                     cmd.CommandText = $"DELETE FROM Habit WHERE Habit_Name='{habitName}';";
                     cmd.ExecuteNonQuery();
                     Print($"Habit '{habitName}' was deleted!");
                 }
-                catch (Exception e)
+                else
                 {
-                    Print(ReturnError(e));
+                    Print($"Habit with the name '{habitName}' doesn't exist!");
                 }
             }
-            else
+            catch (Exception e)
             {
-                Print($"Habit with the name '{habitName}' doesn't exist!");
+                Print(ReturnError(e));
             }
         }
     }

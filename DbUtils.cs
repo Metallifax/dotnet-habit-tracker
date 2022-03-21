@@ -44,18 +44,11 @@ namespace HabitTracker
             var habitExists = CheckIfHabitExists(habitName, conn);
             if (habitExists)
             {
-                try
-                {
-                    using var cmd = conn.CreateCommand();
-                    cmd.CommandText =
-                        $"UPDATE Habit SET Time_Logged=Time_Logged+{habitTime} WHERE Habit_Name='{habitName}';";
-                    cmd.ExecuteNonQuery();
-                    Print($"Habit '{habitName}' was updated!");
-                }
-                catch (Exception e)
-                {
-                    Print(ReturnError(e));
-                }
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText =
+                    $"UPDATE Habit SET Time_Logged=Time_Logged+{habitTime} WHERE Habit_Name='{habitName}';";
+                cmd.ExecuteNonQuery();
+                Print($"Habit '{habitName}' was updated!");
             }
             else
             {
@@ -72,20 +65,13 @@ namespace HabitTracker
             using var cmd = conn.CreateCommand();
             cmd.CommandText = "SELECT * FROM Habit;";
 
-            try
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                if (reader.GetString(1) == habitName)
                 {
-                    if (reader.GetString(1) == habitName)
-                    {
-                        habitExistsFlag = true;
-                    }
+                    habitExistsFlag = true;
                 }
-            }
-            catch (Exception e)
-            {
-                Print(ReturnError(e));
             }
 
             return habitExistsFlag;
