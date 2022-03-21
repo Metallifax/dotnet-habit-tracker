@@ -8,7 +8,6 @@ namespace HabitTracker
 {
     public static class DbUtils
     {
-        
         private const string DbPath = "./database.db";
 
         public static SQLiteConnection GenerateConnection()
@@ -26,7 +25,7 @@ namespace HabitTracker
             conn = new SQLiteConnection($"Data Source={DbPath};New=True;Compress=True");
             conn.Open();
 
-            var cmd = conn.CreateCommand();
+            using var cmd = conn.CreateCommand();
             cmd.CommandText = @"create table Habit (
                                     Habit_ID    integer
                                         constraint Habit_pk
@@ -35,7 +34,7 @@ namespace HabitTracker
                                     Time_Logged double(6, 2)
                                 );";
             cmd.ExecuteNonQuery();
-            
+
             return conn;
         }
 
@@ -47,7 +46,7 @@ namespace HabitTracker
             {
                 try
                 {
-                    var cmd = conn.CreateCommand();
+                    using var cmd = conn.CreateCommand();
                     cmd.CommandText =
                         $"UPDATE Habit SET Time_Logged=Time_Logged+{habitTime} WHERE Habit_Name='{habitName}';";
                     cmd.ExecuteNonQuery();
@@ -69,7 +68,8 @@ namespace HabitTracker
         public static bool CheckIfHabitExists(string? habitName, SQLiteConnection conn)
         {
             var habitExistsFlag = false;
-            var cmd = conn.CreateCommand();
+
+            using var cmd = conn.CreateCommand();
             cmd.CommandText = "SELECT * FROM Habit;";
 
             try
